@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mail</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: linear-gradient(135deg, #ffd1dc, #ff9ebb);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .envelope-wrapper {
+    background: #fff;
+    padding: 40px 50px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    text-align: center;
+    position: relative;
+  }
+
+  .envelope {
+    width: 160px;
+    height: 110px;
+    position: relative;
+    margin: 0 auto 20px auto;
+    cursor: pointer;
+  }
+
+  /* Letter paper - starts small inside envelope */
+  .letter {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 144px;
+    height: 100px;
+    background: #fffdf6;
+    border: 1px solid #f0c0cf;
+    border-radius: 3px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    z-index: 1;
+    transition: all 0.6s ease;
+    padding: 14px 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+    cursor: default;
+  }
+
+  .letter-content {
+    opacity: 0;
+    transition: opacity 0.3s ease 0.3s;
+    font-size: 13px;
+    color: #a3315a;
+    line-height: 1.6;
+    text-align: left;
+  }
+
+  .letter-content strong {
+    color: #d6336c;
+    font-size: 15px;
+  }
+
+  /* Step 1: slide up out of envelope */
+  .envelope.open .letter {
+    transform: translateY(-95px) rotate(-2deg);
+  }
+
+  /* Step 2: expand to full readable size, centered on screen */
+  .envelope.expanded .letter {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 320px;
+    height: 220px;
+    transform: translate(-50%, -50%) rotate(0deg);
+    padding: 30px 34px;
+    z-index: 100;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+
+  .envelope.expanded .letter-content {
+    opacity: 1;
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 99;
+  }
+
+  .overlay.show {
+    display: block;
+  }
+
+  .close-btn {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(90px, -95px);
+    background: #ff4d78;
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 101;
+  }
+
+  .close-btn.show {
+    display: block;
+  }
+
+  .envelope-body {
+    width: 100%;
+    height: 100%;
+    background: #ff6f91;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  .fold-left {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-bottom: 55px solid #e04570;
+    border-right: 80px solid transparent;
+  }
+
+  .fold-right {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-bottom: 55px solid #e04570;
+    border-left: 80px solid transparent;
+  }
+
+  .envelope-flap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-left: 80px solid transparent;
+    border-right: 80px solid transparent;
+    border-top: 60px solid #ff4d78;
+    z-index: 3;
+    transform-origin: top center;
+    transition: transform 0.5s ease;
+  }
+
+  .envelope.open .envelope-flap {
+    transform: rotateX(180deg);
+  }
+
+  h2 {
+    color: #d6336c;
+    margin: 0;
+    font-size: 22px;
+  }
+
+  p {
+    color: #a3315a;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="overlay" id="overlay" onclick="closeLetter()"></div>
+
+  <div class="envelope-wrapper">
+    <div class="envelope" id="envelope" onclick="toggleEnvelope()">
+      <div class="letter" id="letterPaper">
+        <div class="letter-content">
+          <strong>Dear You,</strong><br><br>
+          Just a little note to brighten your day. 💕<br>
+          Hope this made you smile!
+        </div>
+      </div>
+      <div class="envelope-body">
+        <div class="fold-left"></div>
+        <div class="fold-right"></div>
+      </div>
+      <div class="envelope-flap"></div>
+    </div>
+    <h2 id="mailText">You've Got Mail</h2>
+    <p id="subText">Click to open</p>
+  </div>
+
+  <button class="close-btn" id="closeBtn" onclick="closeLetter()">✕</button>
+
+  <script>
+    const envelope = document.getElementById('envelope');
+    const mailText = document.getElementById('mailText');
+    const subText = document.getElementById('subText');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('closeBtn');
+
+    function toggleEnvelope() {
+      if (envelope.classList.contains('expanded')) return;
+
+      envelope.classList.add('open');
+      mailText.textContent = "Opening...";
+      subText.textContent = "";
+
+      // After flap opens and letter slides up, expand it
+      setTimeout(() => {
+        envelope.classList.add('expanded');
+        overlay.classList.add('show');
+        closeBtn.classList.add('show');
+        mailText.textContent = "Message Opened!";
+        subText.textContent = "Click ✕ to close";
+      }, 600);
+    }
+
+    function closeLetter() {
+      envelope.classList.remove('expanded');
+      overlay.classList.remove('show');
+      closeBtn.classList.remove('show');
+
+      setTimeout(() => {
+        envelope.classList.remove('open');
+        mailText.textContent = "You've Got Mail";
+        subText.textContent = "Click to open";
+      }, 300);
+    }
+  </script>
+
+</body>
+</html>
